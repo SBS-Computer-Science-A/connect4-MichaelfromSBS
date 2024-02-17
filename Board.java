@@ -8,9 +8,8 @@ public class Board {//object class of board that contains a 2D array of Cell
     static int col;
     int count = 0;
     int index = 0;
-    boolean grid_drawn = false;
-    boolean traditional;
-    Cell[][] grid;
+    boolean playing = true;
+    Cell[][] grid;//2D array of Cell object
     int y_distance = (800-100)/ConnectFour.rows;
     int x_distance = (1000-70)/ConnectFour.cols;
     public Board(int n, int m){//constructor of Board that create grid with n*m size
@@ -33,6 +32,17 @@ public class Board {//object class of board that contains a 2D array of Cell
             return false;
         }
     }
+    public boolean traditionalSelectCell(int columns, int playerNum){//method that fill cell with player, in traditional version
+        for(int i = ConnectFour.rows-1;i>=0;i--){
+            if(grid[i][columns].getEmpty()){
+                grid[i][columns].setPlayerNum(playerNum);
+                grid[i][columns].setEmpty(false);
+                ConnectFour.traditionalRow = i;
+                return true;
+            }
+        }
+        return false;
+    }
     public int fourInARow(){//return player number that has four in row, -1 otherwise
         if(verticalSearch()!=-1){
             return verticalSearch();
@@ -48,7 +58,7 @@ public class Board {//object class of board that contains a 2D array of Cell
     public int verticalSearch(){//search method of vertical 4 in row, return -1 if not found
         for(int i = 0 ;i<col;i++){
             for(int j = 0;j<row-3;j++){
-                if(grid[j][i].getPlayerNum()!=0&&grid[j][i].getPlayerNum()==grid[j+1][i].getPlayerNum()&&grid[j+1][i].getPlayerNum()==grid[j+2][i].getPlayerNum()&&grid[j+2][i].getPlayerNum()==grid[j+3][j].getPlayerNum()){
+                if(grid[j][i].getPlayerNum()!=-1&&grid[j][i].getPlayerNum()==grid[j+1][i].getPlayerNum()&&grid[j+1][i].getPlayerNum()==grid[j+2][i].getPlayerNum()&&grid[j+2][i].getPlayerNum()==grid[j+3][j].getPlayerNum()){
                     return grid[j][i].getPlayerNum();
                 }
             }
@@ -58,7 +68,7 @@ public class Board {//object class of board that contains a 2D array of Cell
     public int horizontalSearch(){//search method of horizontal 4 in row, return -1 if not found
         for(int i = 0;i<row;i++){
             for(int j = 0;j<col-3;j++){
-                if(grid[i][j].getPlayerNum()!=0&&grid[i][j].getPlayerNum()==grid[i][j+1].getPlayerNum()&&grid[i][j+1].getPlayerNum()==grid[i][j+2].getPlayerNum()&&grid[i][j+2].getPlayerNum()==grid[i][j+3].getPlayerNum()){
+                if(grid[i][j].getPlayerNum()!=-1&&grid[i][j].getPlayerNum()==grid[i][j+1].getPlayerNum()&&grid[i][j+1].getPlayerNum()==grid[i][j+2].getPlayerNum()&&grid[i][j+2].getPlayerNum()==grid[i][j+3].getPlayerNum()){
                     return grid[i][j].getPlayerNum();
                 }
             }
@@ -71,14 +81,14 @@ public class Board {//object class of board that contains a 2D array of Cell
         }
         for(int i = 0; i < row-3; i++){
             for(int j = 0; j<col-3; j++) {
-                if (grid[i][j].getPlayerNum()!=0&& grid[i][j].getPlayerNum() == grid[i + 1][j + 1].getPlayerNum() && grid[i + 1][j + 1].getPlayerNum() == grid[i + 2][j + 2].getPlayerNum() && grid[i + 2][j + 2].getPlayerNum() == grid[i + 3][j + 3].getPlayerNum()) {
+                if (grid[i][j].getPlayerNum()!=-1&& grid[i][j].getPlayerNum() == grid[i + 1][j + 1].getPlayerNum() && grid[i + 1][j + 1].getPlayerNum() == grid[i + 2][j + 2].getPlayerNum() && grid[i + 2][j + 2].getPlayerNum() == grid[i + 3][j + 3].getPlayerNum()) {
                     return grid[i][j].getPlayerNum();
                 }
             }
         }
         for(int i = 0;i<row-3;i++){
             for(int j = col-1;j>=3;j--){
-                if(grid[i][j].getPlayerNum()==grid[i+1][j-1].getPlayerNum()&&grid[i+1][j-1].getPlayerNum()==grid[i+2][j-2].getPlayerNum()&&grid[i+2][j-2].getPlayerNum()==grid[i+3][j-3].getPlayerNum()){
+                if(grid[i][j].getPlayerNum()!=-1&& grid[i][j].getPlayerNum()==grid[i+1][j-1].getPlayerNum()&&grid[i+1][j-1].getPlayerNum()==grid[i+2][j-2].getPlayerNum()&&grid[i+2][j-2].getPlayerNum()==grid[i+3][j-3].getPlayerNum()){
                     return grid[i][j].getPlayerNum();
                 }
             }
@@ -97,26 +107,58 @@ public class Board {//object class of board that contains a 2D array of Cell
                 g.drawLine(20 + i * x_distance, 50, 20 + i * x_distance, 750);
             }
             g.drawLine(950,50,950,750);
-            grid_drawn = true;
 
         if(!ConnectFour.drawing){
             return;
         }
-        ConnectFour.temp = 0;
-        ConnectFour.circles[index][0] = 20+5+x*x_distance;
-        ConnectFour.circles[index][1] = 50+5+y*y_distance;
+
+        ConnectFour.game.count=0;
+        if(ConnectFour.virtual&&ConnectFour.temp==1){//move by virtual opponent
+            if(ConnectFour.game.count<ConnectFour.rows*ConnectFour.cols){
+                for(int column = 0;column<ConnectFour.cols;column++){
+                    boolean found = false;
+                    for(int i = ConnectFour.rows-1;i>=0;i--){
+                        if(selectcell(i,column,2)){
+                            ConnectFour.circles[index][0]=20+5+column*x_distance;
+                            ConnectFour.circles[index][1]=50+5+i*y_distance;
+                            ConnectFour.drawing = true;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(found){
+                        break;
+                    }
+                }
+            }
+        }
+        if(!ConnectFour.drawing){
+            return;
+        }
+        if(!ConnectFour.virtual||ConnectFour.temp!=1){//move by player
+            ConnectFour.circles[index][0] = 20+5+x*x_distance;
+            ConnectFour.circles[index][1] = 50+5+y*y_distance;
+        }
+
         for(int i = 0;i<=index;i++){
-            convertStringToColor(ConnectFour.colors[ConnectFour.temp],g);
+            convertStringToColor(ConnectFour.colors[(ConnectFour.start+i)%ConnectFour.player_number],g);
             g.fillOval(ConnectFour.circles[i][0],ConnectFour.circles[i][1], ConnectFour.radius*2, ConnectFour.radius*2);
             ConnectFour.game.count++;
-            ConnectFour.temp=(ConnectFour.temp+1)%ConnectFour.player_number;
         }
+        ConnectFour.temp=(ConnectFour.temp+1)%ConnectFour.player_number;
         index++;
         if(fourInARow()!=-1){
             Font f1 = new Font(Font.SERIF, Font.BOLD + Font.ITALIC, 30);
             g.setFont(f1);
             g.setColor(Color.BLACK);
             g.drawString("Congratulation! Player " + fourInARow() + " wins!", 270,400);
+            for(int i = 0;i<ConnectFour.rows;i++){
+                for(int j = 0;j<ConnectFour.cols;j++){
+                    System.out.print(grid[i][j].getPlayerNum() + " ");
+                }
+                System.out.println();
+            }
+            playing = false;
         }
     }
     public void convertStringToColor(String str, Graphics g){//convert string of color names to color
